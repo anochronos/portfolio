@@ -11,6 +11,11 @@ export default defineNuxtConfig({
       htmlAttrs: { lang: 'en' },
       title: 'Akshun Kalra | Software Engineer',
       meta: [
+        // viewport-fit=cover: draw the sea under the iPhone's status bar and
+        // Safari's glass toolbar too, instead of leaving bare strips there.
+        // Controls near the edges keep clear of them with
+        // env(safe-area-inset-*) in main.css.
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'description', content: description },
         { name: 'theme-color', content: '#040a15' },
         { name: 'color-scheme', content: 'dark' },

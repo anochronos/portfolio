@@ -23,9 +23,6 @@
 // the page (where the waterline is, the cursor, the zone) and sends it here as
 // messages, so all of this can run in a background thread (sea.worker.ts)
 // where the browser allows, and on the page where it doesn't.
-//
-// The idea of an ASCII jellyfish comes from dang0321's code-art series
-// (https://github.com/dang0321/code-art). This code is written from scratch.
 import { RAMP, HUE, colorIndex, COLOR_RGB, rampIndex, GlyphAtlas, smoothstep, hash2, type GlyphSheet } from '../ascii'
 import { SPECIES, DEEPEST_ZONE, type Light, type Swim, type World } from '../sealife'
 import { waveAt, nameRide, MOON_R, skyMoonR } from '../water'

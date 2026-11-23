@@ -86,9 +86,22 @@ let useKeys = false
 const speed = () => Math.min(400, 130 + depth * 0.06) // how fast the sea rises past, px a second
 const light = () => Math.max(150, 640 - depth * 0.12) // how far the porthole light reaches
 
+// How much of the screen's top edge is the iPhone's status bar, which the
+// score keeps clear of. CSS knows (env(safe-area-inset-top)); a hidden probe
+// asks it.
+let safeTop = 0
+function measureSafeTop() {
+  const probe = document.createElement('div')
+  probe.style.cssText = 'position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top, 0px)'
+  document.body.appendChild(probe)
+  safeTop = parseFloat(getComputedStyle(probe).paddingTop) || 0
+  probe.remove()
+}
+
 function size() {
   const cv = canvas.value
   if (!cv) return
+  measureSafeTop()
   W = window.innerWidth
   H = window.innerHeight
   FS = W < 600 ? 13 : 16
@@ -221,7 +234,7 @@ function step(dt: number) {
     if (keys.has('ArrowDown') || keys.has('s')) sub.ty += k
   }
   sub.tx = Math.max(60, Math.min(W - 60, sub.tx))
-  sub.ty = Math.max(70, Math.min(H - 40, sub.ty))
+  sub.ty = Math.max(70 + safeTop, Math.min(H - 40, sub.ty))
   const px = sub.x
   const ease = Math.min(1, dt * 9)
   sub.x += (sub.tx - sub.x) * ease
@@ -424,18 +437,19 @@ function draw() {
   c.fillStyle = dark
   c.fillRect(0, 0, W, H)
 
-  // What you need to know, along the top
+  // What you need to know, along the top, below the iPhone's status bar
+  const hudTop = 18 + safeTop
   c.font = `${FS}px ${MONO}`
   c.textBaseline = 'top'
   c.textAlign = 'left'
   const m = `${Math.round(depth).toLocaleString('en-US')} m`
-  text(m, 20, 18, '#e4eeff')
-  text(`pearls ${pearls}`, 20, 18 + LH * 1.4, '#fff1cf', 0.85)
-  text(`hull [${'#'.repeat(hull)}${'-'.repeat(HULL - hull)}]`, 20, 18 + LH * 2.6, hull > 1 ? '#c9d8ee' : '#ff9a6b', 0.85)
+  text(m, 20, hudTop, '#e4eeff')
+  text(`pearls ${pearls}`, 20, hudTop + LH * 1.4, '#fff1cf', 0.85)
+  text(`hull [${'#'.repeat(hull)}${'-'.repeat(HULL - hull)}]`, 20, hudTop + LH * 2.6, hull > 1 ? '#c9d8ee' : '#ff9a6b', 0.85)
   const ready = sonar <= 0
-  text(ready ? 'sonar ready' : `sonar ${'.'.repeat(Math.ceil((sonar / SONAR_WAIT) * 6))}`, 20, 18 + LH * 3.8, ready ? '#5ccfff' : '#7f95b8', 0.85)
+  text(ready ? 'sonar ready' : `sonar ${'.'.repeat(Math.ceil((sonar / SONAR_WAIT) * 6))}`, 20, hudTop + LH * 3.8, ready ? '#5ccfff' : '#7f95b8', 0.85)
   c.textAlign = 'right'
-  if (best) text(`best ${best.toLocaleString('en-US')} m`, W - 20, 18 + LH * 2.6, '#7f95b8', 0.75)
+  if (best) text(`best ${best.toLocaleString('en-US')} m`, W - 20, hudTop + LH * 2.6, '#7f95b8', 0.75)
 
   // The title and the end
   c.textAlign = 'center'

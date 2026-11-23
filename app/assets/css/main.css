@@ -1,9 +1,5 @@
 /*
-    Layout and motion ideas adapted from macmillan.studio by Christian MacMillan
-    (https://github.com/cmacmillanmarin/macmillan.studio, MIT).
     Typefaces: Inter Tight and JetBrains Mono, both SIL Open Font License.
-    The ASCII jellyfish idea comes from dang0321/code-art
-    (https://github.com/dang0321/code-art); the drawing code here is original.
 */
 
 @font-face {
@@ -208,8 +204,8 @@ main:focus {
    with JavaScript, since the sound is made by script. */
 .sound-control {
     position: fixed;
-    top: calc(var(--margin) - 0.4rem);
-    right: calc(var(--margin) - 0.4rem);
+    top: calc(var(--margin) - 0.4rem + env(safe-area-inset-top, 0px));
+    right: calc(var(--margin) - 0.4rem + env(safe-area-inset-right, 0px));
     z-index: 47;
     display: none;
     align-items: center;
@@ -507,7 +503,7 @@ main:focus {
 }
 
 .theme-switch:focus-visible {
-    top: var(--margin);
+    top: calc(var(--margin) + env(safe-area-inset-top, 0px));
 }
 
 /* By day the first name sits against a pale blue sky, so it turns dark;
@@ -672,6 +668,7 @@ main:focus {
     display: block;
     width: 100vw;
     height: 100vh;
+    height: 100lvh;
     pointer-events: none;
 }
 
@@ -881,8 +878,8 @@ body::-webkit-scrollbar {
 /* The way back out, for screens without an Esc key too */
 .arcade-exit {
     position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
+    top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    right: calc(0.75rem + env(safe-area-inset-right, 0px));
     padding: 0.5rem 0.75rem;
     border: 1px solid rgb(127 149 184 / 0.4);
     border-radius: 0.4rem;
@@ -1440,7 +1437,7 @@ body::-webkit-scrollbar {
 /* Project page */
 
 .project {
-    padding-top: calc(var(--u) * 1.5);
+    padding-top: calc(var(--u) * 1.5 + env(safe-area-inset-top, 0px));
     padding-bottom: calc(var(--u) * 6);
 }
 
@@ -1662,7 +1659,8 @@ body::-webkit-scrollbar {
     justify-content: space-between;
     gap: 1.5rem;
     width: 100%;
-    padding: var(--margin);
+    /* clear of the iPhone's home bar and Safari's toolbar */
+    padding: var(--margin) var(--margin) calc(var(--margin) + env(safe-area-inset-bottom, 0px));
     color: #d2a969;
     font-size: 0.875rem;
     font-weight: 700;

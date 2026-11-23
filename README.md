@@ -50,11 +50,10 @@ Your photo appears only in the About section: replace `public/profile.jpg` to ch
 
 ## Deploying
 
-`.github/workflows/deploy.yml` builds the site and publishes it on every push to `main`. For that to work, set the repository's Pages source to "GitHub Actions" under Settings, Pages. The custom domain comes from `public/CNAME`.
+`.github/workflows/deploy.yml` builds the site and publishes it on every push to `main`. For that to work, set the repository's Pages source to "GitHub Actions" under Settings, Pages. Set the custom domain there too: a site published by a workflow ignores `public/CNAME`, which is kept only as a record of the domain.
 
 ## Credits
 
-- The layout and motion are inspired by [macmillan.studio](https://macmillan.studio/) by Christian MacMillan, whose source is MIT licensed.
 - The ASCII jellyfish is inspired by [dang0321/code-art](https://github.com/dang0321/code-art). That repo is all rights reserved and asks for a link back when you publish work made with reference to it, which this README gives. None of its code is copied here.
 - The music is "Bread" by Lukrembo, from [Free To Use](https://freetouse.com/music) (`public/audio/bread.mp3`, re-encoded at 128 kbps). Free To Use's free license only covers videos on social platforms; a website needs their Commercial plan or a single-track license, so get one of those before publishing with the music in. To take the music out, delete the file: the rest of the sound works without it.
 - The code in this repo was written for this site.
