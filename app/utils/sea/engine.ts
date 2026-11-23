@@ -62,8 +62,8 @@ export interface Rect {
 export interface Geometry {
   // The waterline on screen (-Infinity when the whole page is under water)
   waterY: number
-  // The project tile in focus: creatures pass behind it
-  focus: Rect | null
+  // Every other project tile: sea life passes behind these, in front of the rest
+  fronts: Rect[]
   // The top of the big contact links, which the reef at the sides grows up towards
   reefTop: number
   // The bottom of the page on screen, where the sea floor is
@@ -315,6 +315,7 @@ export function createSeaEngine(
   // Canvas filters are missing in some browsers; there the glow is blurred in CSS instead
   const canvasFilter = 'filter' in gctx
   if (!canvasFilter) emit({ type: 'cssBlur' })
+
   // The height of the surface at each column, worked out once per frame
   let surfRow = new Float32Array(0)
   // The front layer's characters for this frame, queued to draw after their dark cells
@@ -743,7 +744,7 @@ export function createSeaEngine(
   // ---- what the page tells us ---------------------------------------------
   const pointer = { x: 0, y: 0, on: false }
   const cursor: CursorState = { mode: 'none', x: 0, y: 0, moon: null, sub: null }
-  const geo: Geometry = { waterY: -Infinity, focus: null, reefTop: NaN, floorY: Infinity, name: null }
+  const geo: Geometry = { waterY: -Infinity, fronts: [], reefTop: NaN, floorY: Infinity, name: null }
   const pings: { x: number; y: number; t: number }[] = []
   let pulseAt = -10
   let reduce = false
@@ -1358,8 +1359,12 @@ export function createSeaEngine(
       qY[queued] = y
       queued++
     }
-    // The project tile in focus, which creatures pass behind
-    const focus = geo.focus
+    // The project tiles that stay in front of the sea life
+    const fronts = geo.fronts
+    const behindTile = (x: number, y: number) => {
+      for (const f of fronts) if (x + cw > f.x0 && x < f.x1 && y + ch > f.y0 && y < f.y1) return true
+      return false
+    }
 
     for (let r = 0; r < rows; r++) {
       const y = r * ch
@@ -1386,8 +1391,12 @@ export function createSeaEngine(
 
         // Front layer: creatures live below the waterline only
         const under = y + ch * 0.5 > waterY + ch
-        const hidden = !!focus && x + cw > focus.x0 && x < focus.x1 && y + ch > focus.y0 && y < focus.y1
-        const behind = hidden || (weave[i] === 1 && SPECIES[lifeKind[i]! - 1]?.weave === true)
+        // Behind a front tile, everything is hidden; behind a woven letter
+        // (every other letter of the big text, see SeaScene.vue), the
+        // jellyfish and the creatures that weave are
+        const hidden = fronts.length > 0 && behindTile(x, y)
+        const woven = weave[i] === 1
+        const behind = hidden || (woven && SPECIES[lifeKind[i]! - 1]?.weave === true)
         if (under && life > 0.02 && life > sum && !behind) {
           const v = Math.min(1, (1 - Math.exp(-life * 1.6)) * (1 + light * 0.8))
           const k = rampIndex(v)
@@ -1403,7 +1412,7 @@ export function createSeaEngine(
             queue(glyph, ci, dx, dy)
             glowAt(i, ci, k)
           }
-        } else if (under && sum > 0.02 && !hidden && !(behind && life > sum)) {
+        } else if (under && sum > 0.02 && !hidden && !woven && !(behind && life > sum)) {
           const v = Math.min(1, (1 - Math.exp(-sum * 1.8)) * (1 + light * 0.8))
           const k = rampIndex(v)
           if (k > 0) {
@@ -1565,7 +1574,7 @@ export function createSeaEngine(
         geo.waterY = m.waterY
         geo.floorY = m.floorY
         geo.name = m.name
-        geo.focus = m.focus
+        geo.fronts = m.fronts
         geo.reefTop = m.reefTop
         still()
         break

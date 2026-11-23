@@ -174,8 +174,9 @@ onMounted(async () => {
   }
 
   // ---- weaving through the big text --------------------------------------
-  // Some creatures (see `weave` in sealife.ts) pass behind every other letter
-  // of the large headings and in front of the rest. Each such letter is
+  // The jellyfish and some creatures (see `weave` in sealife.ts) pass behind
+  // every other letter of the large text (your name, the contact links, the
+  // project titles) and in front of the rest. Each such letter is
   // measured once, in page coordinates, then drawn into a tiny mask (one
   // pixel per character cell) whenever the page scrolls, and sent over.
   const WEAVE_TEXT = '.contact-links a, .project-title'
@@ -206,6 +207,26 @@ onMounted(async () => {
           const r = range.getBoundingClientRect()
           letters.push({ ch: text[k]!, x: r.left, y: r.top + window.scrollY, h: r.height, font, ascent })
         }
+      }
+    })
+    // The name is SVG text: each letter's place comes from the SVG, turned
+    // into screen pixels. (Not the wet copy of the first name, which only
+    // tints it under the water.)
+    document.querySelectorAll<SVGTextElement>('.hero-name text:not(.hero-wet)').forEach((t) => {
+      const ctm = t.getScreenCTM()
+      const text = t.textContent ?? ''
+      if (!ctm || !text) return
+      const cs = getComputedStyle(t)
+      const font = `${cs.fontWeight} ${parseFloat(cs.fontSize) * ctm.a}px ${cs.fontFamily}`
+      mctx.font = font
+      const ascent = mctx.measureText('H').fontBoundingBoxAscent || parseFloat(cs.fontSize) * ctm.a * 0.9
+      const baseline = t.y.baseVal.numberOfItems ? t.y.baseVal.getItem(0).value : 0
+      let n = 0
+      for (let k = 0; k < t.getNumberOfChars(); k++) {
+        if (/\s/.test(text[k]!) || n++ % 2) continue
+        const e = t.getExtentOfChar(k)
+        const p = new DOMPoint(e.x, baseline).matrixTransform(ctm)
+        letters.push({ ch: text[k]!, x: p.x, y: p.y - ascent + window.scrollY, h: e.height * ctm.d, font, ascent })
       }
     })
   }
@@ -292,14 +313,17 @@ onMounted(async () => {
   const pointer = { x: 0, y: 0, on: false }
   let lastKey = ''
 
-  // The project tile in the middle of the work strip, which stays in front
-  // of the creatures: they pass behind it
-  function focusRect(): Rect | null {
-    const tile = document.querySelector<HTMLElement>('.work-track li.is-focus .tile')
-    if (!tile) return null
-    const r = tile.getBoundingClientRect()
-    if (r.bottom < 0 || r.top > H || r.right < 0 || r.left > W) return null
-    return { x0: r.left, y0: r.top, x1: r.right, y1: r.bottom }
+  // Every other project tile stays in front of the sea life (WorkStrip.vue
+  // marks them is-front): fish and jellyfish pass behind those, and in front
+  // of the rest
+  function frontRects(): Rect[] {
+    const out: Rect[] = []
+    document.querySelectorAll<HTMLElement>('.work-track li.is-front .tile').forEach((tile) => {
+      const r = tile.getBoundingClientRect()
+      if (r.bottom < 0 || r.top > H || r.right < 0 || r.left > W) return
+      out.push({ x0: Math.round(r.left), y0: Math.round(r.top), x1: Math.round(r.right), y1: Math.round(r.bottom) })
+    })
+    return out
   }
 
   function sendState(force = false) {
@@ -307,16 +331,13 @@ onMounted(async () => {
     const waterY = waterlineY()
     const floorY = document.documentElement.scrollHeight - window.scrollY
     const name = Number.isFinite(waterY) ? nameGeometry() : null
-    const focus = focusRect()
+    const fronts = frontRects()
     const links = document.querySelector('.contact-links')
     const reefTop = links ? links.getBoundingClientRect().top : NaN
     const key = [
       reefTop,
       waterY,
-      focus?.x0,
-      focus?.y0,
-      focus?.x1,
-      focus?.y1,
+      fronts.map((f) => `${f.x0},${f.y0},${f.x1},${f.y1}`).join(';'),
       floorY,
       name?.x0,
       name?.k,
@@ -336,7 +357,7 @@ onMounted(async () => {
     send({
       type: 'state',
       waterY,
-      focus,
+      fronts,
       reefTop,
       floorY,
       name,
@@ -443,7 +464,10 @@ onMounted(async () => {
   }
 
   function onTow(e: Event) {
-    send({ type: 'tow', dx: (e as CustomEvent<number>).detail })
+    const dx = (e as CustomEvent<number>).detail
+    send({ type: 'tow', dx })
+    // The names are in place: measure their letters for the weave
+    if (!dx) measureLetters()
   }
   function onLift(e: Event) {
     const d = (e as CustomEvent<{ x: number; bottom: number } | null>).detail

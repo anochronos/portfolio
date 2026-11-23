@@ -5,13 +5,14 @@ import { projects, pad } from '~/data/projects'
 // The section is made taller than the screen and its contents are pinned,
 // so vertical scrolling has somewhere to go while the row slides sideways.
 // Without JavaScript, or with reduced motion on, it is a plain row you swipe.
+// Every other tile (is-front) stays in front of the sea life, which swims
+// across the rest (see frontRects in SeaScene.vue).
 const section = ref<HTMLElement>()
 const pin = ref<HTMLElement>()
 const track = ref<HTMLElement>()
 
 const driven = ref(false)
 const active = ref(0)
-const cells = ref<number[]>(projects.map(() => 0))
 
 let step = 0 // distance from one tile to the next
 let travel = 0 // how far the row slides in total
@@ -41,27 +42,19 @@ function update() {
     track.value.style.transform = `translate3d(${-x}px, 0, 0)`
   }
 
-  // Each tile breaks into bigger characters the further its centre is from the middle of the screen.
+  // Which tile is nearest the middle of the screen, for the counter
   const middle = window.innerWidth / 2
   let nearest = 0
   let nearestDistance = Infinity
   list.forEach((tile, i) => {
     const rect = tile.getBoundingClientRect()
     const distance = Math.abs(rect.left + rect.width / 2 - middle) / step
-    const cell = distance < 0.2 ? 0 : snapCell(6 + 34 * (distance - 0.2))
-    if (cells.value[i] !== cell) cells.value[i] = cell
     if (distance < nearestDistance) {
       nearestDistance = distance
       nearest = i
     }
   })
   active.value = nearest
-}
-
-// A few fixed sizes, so a tile only redraws when it crosses from one to the next.
-const SIZES = [7, 9, 11, 14, 17, 21, 26, 32, 40]
-function snapCell(size: number): number {
-  return SIZES.find((s) => s >= size) ?? SIZES[SIZES.length - 1]!
 }
 
 function schedule() {
@@ -103,7 +96,7 @@ onBeforeUnmount(() => {
       </div>
 
       <ul ref="track" class="work-track">
-        <li v-for="(project, i) in projects" :key="project.slug" :class="{ 'is-focus': i === active }">
+        <li v-for="(project, i) in projects" :key="project.slug" :class="{ 'is-front': i % 2 === 0 }">
           <NuxtLink class="tile" :to="`/work/${project.slug}`" @focus="onFocus(i)">
             <AsciiImage
               class="tile-media"
@@ -111,7 +104,6 @@ onBeforeUnmount(() => {
               :seed="project.slug"
               :fit="project.fit"
               :pixel-art="project.pixelArt"
-              :cell="cells[i]"
             />
             <span class="tile-title">{{ project.title }}</span>
             <AsciiFrame :seed="i + 1" />
