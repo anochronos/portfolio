@@ -19,6 +19,11 @@ export default defineNuxtConfig({
         { property: 'og:type', content: 'website' },
       ],
       link: [
+        // The tab icon: a jellyfish (public/favicon.svg), with a classic
+        // .ico for older browsers and a PNG for phones' home screens
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         {
           rel: 'preload',
           href: '/fonts/inter-tight-latin.woff2',
