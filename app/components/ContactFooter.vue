@@ -17,10 +17,6 @@ const year = new Date().getFullYear()
     </ul>
     <div class="contact-foot">
       <p>Akshun Kalra</p>
-      <p>
-        Music: Bread by Lukrembo, from
-        <a href="https://freetouse.com/music" target="_blank" rel="noopener">Free To Use</a>
-      </p>
       <p>&copy;{{ year }}</p>
     </div>
   </footer>

@@ -961,6 +961,14 @@ body::-webkit-scrollbar {
     transform: translate3d(0, 0, 0);
 }
 
+/* On phones the contact links fill the width, so the hook hangs just above
+   them instead (FishHook.vue sets its height), a little smaller */
+@media (max-width: 48rem) {
+    .hook {
+        font-size: 1.15rem;
+    }
+}
+
 /* Reeled in: quick, and accelerating upward */
 .hook.is-reeling {
     transition: transform 0.9s cubic-bezier(0.6, 0, 0.9, 0.5);
@@ -1586,9 +1594,9 @@ body::-webkit-scrollbar {
     text-decoration: none;
 }
 
-/* The name, credits and copyright sit at the very bottom of the page, on the
-   sand under the reef, in the sand's own amber, bold and glowing a little so
-   they read over it */
+/* Your name and the copyright sit in the two bottom corners of the page, on
+   the sand under the reef, in the sand's own amber, bold and glowing a little
+   so they read over it */
 .contact-foot {
     position: absolute;
     right: 0;
@@ -1597,12 +1605,9 @@ body::-webkit-scrollbar {
     /* above the jellyfish, like the rest of the text (see "Paragraphs and lists") */
     z-index: 45;
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 0.25rem 1.5rem;
+    gap: 1.5rem;
     width: 100%;
-    max-width: var(--max);
-    margin-inline: auto;
     padding: var(--margin);
     color: #d2a969;
     font-size: 0.875rem;
@@ -1630,8 +1635,22 @@ body::-webkit-scrollbar {
 }
 
 @media (min-width: 48.0625rem) {
+    /* Everything at the bottom of the page fits on one screen: the links are
+       as big as the width allows, but no taller than the room left above the
+       reef (the same height as the section's padding-bottom), less the
+       padding around them. Their three lines are 2.58em tall. */
+    .contact {
+        padding-top: calc(var(--u) * 2);
+    }
+
     .contact-links {
-        font-size: clamp(5rem, 12.5vw, 14rem);
+        padding-block: calc(var(--u) * 2);
+        font-size: clamp(3.25rem, 12.5vw, 14rem);
+        font-size: clamp(
+            3.25rem,
+            min(12.5vw, calc((100svh - clamp(260px, 50lvh, 440px) - var(--u) * 6) / 2.6)),
+            14rem
+        );
         line-height: 0.86;
     }
 
@@ -1645,19 +1664,7 @@ body::-webkit-scrollbar {
     }
 
     .contact-foot {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        padding-inline: 0;
         font-size: 1.0625rem;
-    }
-
-    .contact-foot p:first-child {
-        padding-left: var(--margin);
-    }
-
-    .contact-foot p:last-child {
-        padding-right: var(--margin);
-        text-align: right;
     }
 }
 

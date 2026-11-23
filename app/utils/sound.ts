@@ -125,20 +125,39 @@ function swell(c: AudioContext, target: AudioParam, rate: number, amount: number
   lfo.start()
 }
 
+// Phones and tablets: their speakers can't play the deepest notes (asked
+// to, they rattle and crackle), and they're busier, so the sound gets a
+// bigger buffer to keep from running dry, which is heard as crackling too
+const handheld = () => window.matchMedia('(hover: none), (pointer: coarse)').matches
+
 function build(): AudioContext | null {
   if (ac) return ac
   const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
   if (!AC) return null
-  const c = new AC()
+  let c: AudioContext
+  try {
+    c = new AC({ latencyHint: handheld() ? 'playback' : 'interactive' })
+  } catch {
+    c = new AC()
+  }
   ac = c
   brown = makeNoise(c)
 
   out = c.createGain()
   out.gain.value = 0
+  // Everything below what the speakers can play is cut before it gets to them
+  const floor = c.createBiquadFilter()
+  floor.type = 'highpass'
+  floor.frequency.value = handheld() ? 110 : 28
+  floor.Q.value = 0.7
+  // A gentle limiter, slow enough not to distort the low notes it catches
   const limit = c.createDynamicsCompressor()
   limit.threshold.value = -14
+  limit.knee.value = 12
   limit.ratio.value = 6
-  out.connect(limit).connect(c.destination)
+  limit.attack.value = 0.02
+  limit.release.value = 0.3
+  out.connect(floor).connect(limit).connect(c.destination)
   meter = c.createAnalyser()
   meter.fftSize = 512
   meterBuf = new Float32Array(meter.fftSize)
@@ -334,7 +353,8 @@ function setDepth(zone: number, now = false) {
   const cut = 18000 * Math.pow(260 / 18000, Math.pow(k, 0.85))
   for (const f of musicTone) f.frequency.setTargetAtTime(cut, t, tc)
   musicLevel?.gain.setTargetAtTime(0.36 - 0.1 * k * k, t, tc)
-  musicRate = 1 - 0.2 * k * k
+  // (not on phones, where changing the speed as it plays tends to crackle)
+  musicRate = handheld() ? 1 : 1 - 0.2 * k * k
   amb.drone.gain.setTargetAtTime(0.012 + 0.07 * k * k, t, tc)
   amb.dread.gain.setTargetAtTime(0.16 * Math.pow(Math.max(0, (k - 0.4) / 0.6), 2), t, tc * 1.6)
   if (zone >= DEEPEST - 2) groanSoon()
