@@ -217,6 +217,7 @@ function bellTable(nPhi: number, nTh: number): BellTable {
 const TILT = -0.22 // we look slightly up at the bell, so the rim reads as an ellipse
 const PHI_MAX = 1.78 // a little past the equator, so the rim tucks under
 const LAG = 2.6 // seconds it takes a ripple to travel down a tentacle
+const GLOW = 1.45 // how strongly everything that's lit glows: the bloom around characters and the soft halos
 
 export function createSeaEngine(
   canvases: SeaCanvases,
@@ -245,6 +246,7 @@ export function createSeaEngine(
   // instead of building a new gradient for every light every frame
   const sprites = new Map<string, AnyCanvas>()
   function halo(c: Ctx2D, scale: number, x: number, y: number, r: number, rgb: string, a: number) {
+    a *= GLOW
     if (a <= 0.003 || r <= 0) return
     let sprite = sprites.get(rgb)
     if (!sprite) {
@@ -1024,8 +1026,10 @@ export function createSeaEngine(
     const top = Math.max(0, waterY - amp * 2)
     const water = bctx.createLinearGradient(0, top * bd, 0, H * bd)
     // By day the shallows are a clear blue, still darkening to the same deep
-    water.addColorStop(0, mixColor(mixRGB([12, 37, 70], [5, 16, 36], deep), mixRGB([30, 112, 166], [9, 38, 76], deep), dayMix))
-    water.addColorStop(1, mixColor(mixRGB([4, 10, 21], [1, 2, 6], deep), mixRGB([10, 52, 94], [3, 10, 24], deep), dayMix))
+    // The deeper you go the closer to black, so the lights down there stand out
+    const abyss = deep * deep
+    water.addColorStop(0, mixColor(mixRGB([12, 37, 70], [2, 7, 17], abyss), mixRGB([30, 112, 166], [6, 26, 54], abyss), dayMix))
+    water.addColorStop(1, mixColor(mixRGB([4, 10, 21], [0, 1, 3], abyss), mixRGB([10, 52, 94], [1, 6, 16], abyss), dayMix))
     bctx.fillStyle = water
     bctx.fillRect(0, top * bd, bv.width, (H - top) * bd)
 
@@ -1336,7 +1340,7 @@ export function createSeaEngine(
     // A cell's glow: its character's colour, scaled by how much ink a
     // character that dense puts on the screen
     const glowAt = (i: number, ci: number, k: number) => {
-      const ink = 0.1 + 0.32 * (k / (RAMP.length - 1))
+      const ink = GLOW * (0.1 + 0.32 * (k / (RAMP.length - 1)))
       const o = i * 4
       gp[o] = COLOR_RGB[ci * 3]! * ink
       gp[o + 1] = COLOR_RGB[ci * 3 + 1]! * ink
@@ -1469,19 +1473,19 @@ export function createSeaEngine(
   function refreshGlow() {
     glowCtx.putImageData(glowPx, 0, 0)
     gctx.clearRect(0, 0, gv.width, gv.height)
-    gctx.globalAlpha = 0.9
-    if (canvasFilter) gctx.filter = 'blur(1.25px) saturate(1.3)'
+    gctx.globalAlpha = 1
+    if (canvasFilter) gctx.filter = 'blur(1.25px) saturate(1.4)'
     gctx.drawImage(glowSrc, 0, 0, cols * (cw / 4), rows * (ch / 4))
     if (canvasFilter) gctx.filter = 'none'
     // The haze: the bloom shrunk to a tenth of the screen and blurred there,
     // which costs almost nothing, then added back on top, wide and soft. One
     // layer on the page instead of two.
     hctx.clearRect(0, 0, hv.width, hv.height)
-    if (canvasFilter) hctx.filter = 'blur(1.4px)'
+    if (canvasFilter) hctx.filter = 'blur(1.8px)'
     hctx.drawImage(gv, 0, 0, hv.width, hv.height)
     if (canvasFilter) hctx.filter = 'none'
     gctx.globalCompositeOperation = 'lighter'
-    gctx.globalAlpha = 0.94
+    gctx.globalAlpha = 1
     gctx.drawImage(hv, 0, 0, gv.width, gv.height)
     gctx.globalCompositeOperation = 'source-over'
     gctx.globalAlpha = 1

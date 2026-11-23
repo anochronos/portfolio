@@ -1592,6 +1592,60 @@ body::-webkit-scrollbar {
 
 .contact-links a {
     text-decoration: none;
+    text-shadow: 0 0 0.08em rgb(92 207 255 / 0.55), 0 0 0.4em rgb(92 207 255 / 0.3);
+}
+
+/* A light that flickers: steady most of the time, then it stutters, goes
+   dim for a moment and catches again, like an old lamp on the seabed. Each
+   link on its own timing, so they never stutter together. Only the moments
+   it changes are drawn again, so it costs next to nothing. */
+@media (prefers-reduced-motion: no-preference) {
+    .contact-links a {
+        animation: lamp 8.3s steps(1, end) infinite;
+    }
+
+    .contact-links li:nth-child(2) a {
+        animation-duration: 11.1s;
+        animation-delay: -4.2s;
+    }
+
+    .contact-links li:nth-child(3) a {
+        animation-duration: 13.7s;
+        animation-delay: -9.5s;
+    }
+
+    /* Pointing at one keeps its light on */
+    .contact-links a:hover,
+    .contact-links a:focus-visible {
+        animation: none;
+    }
+}
+
+@keyframes lamp {
+    0%, 58%, 60.5%, 62%, 66%, 90%, 91.5%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 0.08em rgb(92 207 255 / 0.55), 0 0 0.4em rgb(92 207 255 / 0.3);
+    }
+    59% {
+        opacity: 0.45;
+        text-shadow: none;
+    }
+    61% {
+        opacity: 0.7;
+        text-shadow: 0 0 0.08em rgb(92 207 255 / 0.25);
+    }
+    63.5% {
+        opacity: 0.35;
+        text-shadow: none;
+    }
+    65% {
+        opacity: 0.85;
+        text-shadow: 0 0 0.08em rgb(92 207 255 / 0.4);
+    }
+    91% {
+        opacity: 0.5;
+        text-shadow: none;
+    }
 }
 
 /* Your name and the copyright sit in the two bottom corners of the page, on
