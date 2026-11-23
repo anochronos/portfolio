@@ -1,7 +1,11 @@
 node_modules/
+.nuxt/
+.output/
+.data/
+.nitro/
+.cache/
+dist/
+.env
 .DS_Store
 Thumbs.db
 .vscode/
-.env
-dist/
-build/

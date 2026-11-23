@@ -1,0 +1,1810 @@
+/*
+    Layout and motion ideas adapted from macmillan.studio by Christian MacMillan
+    (https://github.com/cmacmillanmarin/macmillan.studio, MIT).
+    Typefaces: Inter Tight and JetBrains Mono, both SIL Open Font License.
+    The ASCII jellyfish idea comes from dang0321/code-art
+    (https://github.com/dang0321/code-art); the drawing code here is original.
+*/
+
+@font-face {
+    font-family: 'Inter Tight';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fonts/inter-tight-latin.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+    src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
+:root {
+    /* Deep-sea palette. The canvas scenes use the same values. */
+    --sea: #040a15;
+    --sea-2: #0a1729;
+    --abyss: #01040a;
+    --ink: #d9e6ff;
+    --ink-soft: #7f95b8;
+    --glow: #5ccfff;
+    --glow-ink: #02101c;
+    --line: rgba(92, 207, 255, 0.14);
+    --fg: var(--ink);
+    --soft: var(--ink-soft);
+    --font: 'Inter Tight', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+    /* 8 columns on small screens, 12 from tablet landscape up */
+    --max: 1800px;
+    --cols: 8;
+    --margin: 1rem;
+    --gutter: 0.5rem;
+
+    /* --u is one 16px step of the 1440px design, scaled with the viewport */
+    --u: 1rem;
+    --b1: clamp(1rem, 4vw, 1.375rem);
+    --b1-lh: 1.22;
+    --b2: 0.875rem;
+    --h1: clamp(2.75rem, 13vw, 5rem);
+    --h2: clamp(1.5rem, 6.4vw, 2.75rem);
+    --h2-lh: 1.12;
+    --h3: clamp(1.5rem, 7vw, 2.5rem);
+    --h3-lh: 0.96;
+    --ease: cubic-bezier(0.53, 0.24, 0.08, 0.99);
+}
+
+@media (min-width: 48.0625rem) {
+    :root {
+        --cols: 12;
+        --gutter: 1rem;
+        --u: clamp(0.75rem, 1.111vw, 1.25rem);
+        --b1: clamp(1rem, 1.528vw, 1.72rem);
+        --b1-lh: 1.27;
+        --b2: clamp(0.875rem, 1.111vw, 1.25rem);
+        --h1: clamp(4rem, 8.47vw, 9.5rem);
+        --h2: clamp(2rem, 3.611vw, 4.0625rem);
+        --h2-lh: 1.077;
+        --h3: clamp(1.75rem, 3.194vw, 3.6rem);
+        --h3-lh: 0.92;
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+body {
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: var(--b1);
+    line-height: var(--b1-lh);
+    color: var(--ink);
+    background: var(--sea);
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+    background: var(--glow);
+    color: var(--glow-ink);
+}
+
+a {
+    color: inherit;
+    text-decoration-line: underline;
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.18em;
+}
+
+a:hover {
+    background: var(--glow);
+    color: var(--glow-ink);
+}
+
+:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 0.2rem;
+}
+
+ul,
+ol {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    column-gap: var(--gutter);
+    width: 100%;
+    max-width: var(--max);
+    margin-inline: auto;
+    padding-inline: var(--margin);
+}
+
+.sq {
+    display: inline-block;
+    flex: none;
+    width: calc(var(--u) * 0.5);
+    height: calc(var(--u) * 0.5);
+    background: var(--glow);
+    box-shadow: 0 0 calc(var(--u) * 0.6) rgba(92, 207, 255, 0.7);
+}
+
+.section-label .sq {
+    /* Beside each section's heading, a little glowing pixel coral swaying in the current */
+    width: calc(var(--u) * 0.9);
+    height: calc(var(--u) * 0.8);
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 8' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23ffd1ef'/%3E%3Crect x='4' y='0' width='1' height='1' fill='%23ffd1ef'/%3E%3Crect x='8' y='0' width='1' height='1' fill='%23ffd1ef'/%3E%3Crect x='0' y='1' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='2' y='1' width='1' height='1' fill='%23ffd1ef'/%3E%3Crect x='4' y='1' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='6' y='1' width='1' height='1' fill='%23ffd1ef'/%3E%3Crect x='8' y='1' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='1' y='2' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='4' y='2' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='6' y='2' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='7' y='2' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='2' y='3' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='4' y='3' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='6' y='3' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='2' y='4' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='3' y='4' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='4' y='4' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='5' y='4' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='6' y='4' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='3' y='5' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='4' y='5' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='5' y='5' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='4' y='6' width='1' height='1' fill='%23ff7ace'/%3E%3Crect x='3' y='7' width='1' height='1' fill='%23c45aa0'/%3E%3Crect x='4' y='7' width='1' height='1' fill='%23c45aa0'/%3E%3Crect x='5' y='7' width='1' height='1' fill='%23c45aa0'/%3E%3C/svg%3E") center / contain no-repeat;
+    box-shadow: none;
+    filter: drop-shadow(0 0 calc(var(--u) * 0.3) rgba(255, 122, 206, 0.8));
+    transform-origin: 50% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes coral-sway {
+        0%,
+        100% {
+            transform: rotate(-5deg);
+        }
+        50% {
+            transform: rotate(5deg);
+        }
+    }
+
+    .section-label .sq {
+        animation: coral-sway 3.4s ease-in-out infinite;
+    }
+}
+
+.num,
+.section-label,
+.project-back {
+    font-family: var(--mono);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.num {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+}
+
+@media (min-width: 48.0625rem) {
+    .sq {
+        width: calc(var(--u) * 0.75);
+        height: calc(var(--u) * 0.75);
+    }
+}
+
+/* The hook (FishHook.vue) hands focus back to the page's start */
+main:focus {
+    outline: none;
+}
+
+/* The sound switch (SoundSwitch.vue): just a little speaker in characters
+   in the top corner, faint until you point at it, with waves coming off it
+   when the sound is on, and a volume meter that slides out beside it. Only
+   with JavaScript, since the sound is made by script. */
+.sound-control {
+    position: fixed;
+    top: calc(var(--margin) - 0.4rem);
+    right: calc(var(--margin) - 0.4rem);
+    z-index: 47;
+    display: none;
+    align-items: center;
+}
+
+.js .sound-control {
+    display: flex;
+}
+
+.sound-switch {
+    display: block;
+    min-width: 2.75rem;
+    min-height: 2rem;
+    padding: 0.4rem;
+    border: 0;
+    background: none;
+    color: var(--ink-soft);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    line-height: 1;
+    text-align: left;
+    opacity: 0.45;
+    cursor: pointer;
+    transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.sound-switch.is-on {
+    opacity: 0.6;
+}
+
+:root[data-theme='day'] .sound-switch {
+    color: #0c2c4c;
+}
+
+.sound-control:hover .sound-switch,
+.sound-switch:focus-visible {
+    opacity: 1;
+}
+
+/* The volume meter: bars rising left to right, lit up to the volume. A range
+   input lies invisibly over them and does the work. Hidden on touch screens,
+   which have their own volume buttons. */
+.sound-meter {
+    position: relative;
+    display: block;
+    padding: 0.4rem 0.35rem;
+    opacity: 0;
+    transform: translateX(0.5rem);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.sound-control:hover .sound-meter,
+.sound-control:focus-within .sound-meter {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+}
+
+@media (hover: none) {
+    .sound-meter {
+        display: none;
+    }
+}
+
+.sound-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 14px;
+}
+
+.sound-bars i {
+    width: 3px;
+    height: calc(4px + var(--k) * 1.25px);
+    border-radius: 1px;
+    background: var(--ink-soft);
+    opacity: 0.3;
+}
+
+/* Lit bars flicker brighter with the sound when it's on */
+.sound-bars i.is-lit {
+    background: var(--ink);
+    opacity: 0.7;
+}
+
+.sound-control.is-on .sound-bars i.is-lit {
+    opacity: calc(0.55 + var(--level, 0) * 0.45);
+}
+
+:root[data-theme='day'] .sound-bars i {
+    background: #2f5f88;
+}
+
+:root[data-theme='day'] .sound-bars i.is-lit {
+    background: #0c2c4c;
+}
+
+.sound-meter input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.sound-meter:has(input:focus-visible) {
+    outline: 1px solid var(--glow);
+}
+
+.sound-switch:focus-visible {
+    outline: 1px solid var(--glow);
+    outline-offset: 0;
+}
+
+.sound-icon {
+    white-space: pre;
+}
+
+.sound-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .sound-switch.is-on .sound-waves {
+        animation: sound-waves 2.4s ease-in-out infinite;
+    }
+
+    @keyframes sound-waves {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+}
+
+/* Tow: the opening (TowIn.vue). With JavaScript and motion, the names
+   start off screen, the first name to the left and the surname below, and
+   are brought in; their groups' translate is in SVG units, so this
+   is plenty. Should the script never run, they come back after a few
+   seconds anyway. */
+@media (prefers-reduced-motion: no-preference) {
+    .js .tow-first {
+        transform: translateX(-400vw);
+        animation: tow-failsafe 0s 8s forwards;
+    }
+
+    .js .tow-last {
+        transform: translateY(400vh);
+        animation: tow-failsafe 0s 8s forwards;
+    }
+
+    @keyframes tow-failsafe {
+        to { transform: none; }
+    }
+}
+
+/* The rope, drawn over the page while the first name comes in */
+.tow-in {
+    position: fixed;
+    inset: 0;
+    z-index: 44;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.tow-rope {
+    fill: none;
+    stroke: #d8c497;
+    stroke-width: 2px;
+    stroke-dasharray: 1 4;
+    stroke-linecap: round;
+    transition: opacity 0.2s linear;
+}
+
+:root[data-theme='day'] .tow-rope {
+    stroke: #5b4a2e;
+}
+
+/* The crew calling out from the boat (ShipCalls.vue): a small speech bubble
+   with its tail pointing down at the flag. JS places it. It's sized to the
+   whole line up front, so it doesn't grow while the words type in. */
+.ship-call,
+.crab-say {
+    --bubble-bg: rgb(6 16 32 / 0.88);
+    --bubble-edge: rgb(127 149 184 / 0.75);
+    position: fixed;
+    inset: 0;
+    z-index: 44;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.ship-call.is-shown,
+.crab-say.is-shown {
+    opacity: 1;
+}
+
+/* The crab's bubble is a button: each click gets the next line out of it */
+.crab-bubble {
+    pointer-events: auto;
+    text-align: left;
+    cursor: pointer;
+}
+
+.has-sea-cursor .crab-bubble,
+.has-sea-cursor .crab-bubble * {
+    cursor: pointer !important;
+}
+
+.crab-bubble:hover,
+.crab-bubble:focus-visible {
+    --bubble-edge: var(--glow);
+    outline: none;
+}
+
+:root[data-theme='day'] .ship-call,
+:root[data-theme='day'] .crab-say {
+    --bubble-bg: rgb(226 243 253 / 0.9);
+    --bubble-edge: rgb(47 95 136 / 0.6);
+}
+
+.ship-call-bubble {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: content-box;
+    width: calc(var(--chars) * 1ch);
+    margin: 0;
+    padding: 0.5em 0.85em;
+    border: 1px solid var(--bubble-edge);
+    border-radius: 0.6em;
+    background: var(--bubble-bg);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    white-space: pre;
+    will-change: transform;
+}
+
+:root[data-theme='day'] .ship-call-bubble {
+    color: #0c2c4c;
+}
+
+/* The tail: its fill covers the bubble's bottom edge where they meet */
+.ship-call-tail {
+    position: absolute;
+    top: calc(100% - 1px);
+    left: 0;
+    display: block;
+    overflow: visible;
+}
+
+.ship-call-tail path {
+    fill: var(--bubble-bg);
+    stroke: var(--bubble-edge);
+    stroke-width: 1px;
+    stroke-linejoin: round;
+}
+
+.ship-call-caret {
+    color: var(--glow);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .ship-call-caret {
+        animation: caret 1s steps(1) infinite;
+    }
+
+    @keyframes caret {
+        50% { opacity: 0; }
+    }
+}
+
+/* The day/night switch for keyboards (ThemeSwitch.vue), shown when tabbed to */
+.theme-switch {
+    position: absolute;
+    left: var(--margin);
+    top: -6rem;
+    z-index: 60;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    background: var(--glow);
+    color: var(--glow-ink);
+    font: inherit;
+}
+
+.theme-switch:focus-visible {
+    top: var(--margin);
+}
+
+/* By day the first name sits against a pale blue sky, so it turns dark;
+   the surname is under water and keeps its colour */
+.hero-name text {
+    transition: fill 1.2s ease;
+}
+
+:root[data-theme='day'] .hero-name text:not(.hero-under, .hero-wet) {
+    --name-fill: #0c2c4c;
+}
+
+/* Layers
+   From the back: the sea's gradient, then its back canvas (snow, pings,
+   light waves), then the page, then the jellyfish canvas over everything. */
+
+.sea-backdrop,
+.sea-back {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.sea-backdrop {
+    background: radial-gradient(120% 90% at 70% 100%, #0b2240 0%, var(--sea) 60%);
+}
+
+.sea-back,
+.sea {
+    width: 100%;
+    height: 100vh;
+    height: 100lvh;
+}
+
+.sea-back {
+    display: block;
+    bottom: auto;
+}
+
+.sea {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    pointer-events: none;
+}
+
+.sea canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* A blurred copy screened on top makes the jellyfish glow: a tight bloom
+   around each character and a wide haze, as light scatters in water. */
+.sea-bloom {
+    mix-blend-mode: screen;
+}
+
+/* Only where canvas filters are missing (SeaScene blurs it itself elsewhere) */
+.sea-bloom.is-css-blur {
+    filter: blur(5px) saturate(1.3);
+}
+
+/* Paragraphs and lists sit above the jellyfish so they always stay readable.
+   Nothing around them may set a z-index, or they would be trapped below. */
+.section-label,
+.statement,
+.about-text,
+.log,
+.kit,
+.project-text,
+.project-kind {
+    position: relative;
+    z-index: 45;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Hero: the name, centred, drawn as outlines on load and then filled */
+
+.hero {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: var(--margin);
+    overflow: hidden;
+}
+
+.hero-name {
+    width: min(86vw, 36rem);
+    line-height: 0;
+    pointer-events: none;
+}
+
+.hero-name svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.hero-name text {
+    --name-fill: var(--ink);
+    font-family: var(--font);
+    font-size: 100px;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    fill: var(--name-fill);
+    paint-order: stroke;
+}
+
+/* The surname is under water, so it takes on the water's colour, and so
+   does the bottom of the first name, where it sits in the water */
+.hero-name .hero-under,
+.hero-name .hero-wet {
+    --name-fill: #9ccfff;
+}
+
+:root[data-theme='day'] .hero-name .hero-wet {
+    --name-fill: #154a74;
+}
+
+@media (min-width: 48.0625rem) {
+    .hero-name {
+        width: min(88vw, 110rem);
+    }
+}
+
+/* The cursor: the moon in the sky, a submarine under water (SeaCursor.vue).
+   Only on mouse and trackpad screens, and only once its script is running. */
+.has-sea-cursor,
+.has-sea-cursor * {
+    cursor: none !important;
+}
+
+/* except over the sound switch, volume meter and depth gauge, where it steps aside */
+.has-sea-cursor .sound-control,
+.has-sea-cursor .sound-control *,
+.has-sea-cursor .depth-meter,
+.has-sea-cursor .depth-meter * {
+    cursor: pointer !important;
+}
+
+.sea-cursor {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+}
+
+/* CRT: faint scanlines and slightly darker corners over the whole page, like
+   an old terminal. It is one still layer, so it costs nothing per frame. It
+   steps aside for people who ask for more contrast, and in print. */
+.crt {
+    position: fixed;
+    inset: 0;
+    z-index: 95;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 120% 100% at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(0, 3, 10, 0.5) 100%),
+        repeating-linear-gradient(
+            to bottom,
+            rgba(2, 6, 16, 0) 0,
+            rgba(2, 6, 16, 0) 1px,
+            rgba(2, 6, 16, 0.24) 2px,
+            rgba(2, 6, 16, 0) 3px
+        );
+}
+
+@media (prefers-contrast: more), print {
+    .crt {
+        display: none;
+    }
+}
+
+/* No scrollbar: the depth gauge (DepthMeter.vue) stands in for it. The page
+   scrolls every usual way. */
+html {
+    scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* The depth gauge down the right edge: a thin line with marks, crowding
+   together toward the seabed, a marker with the depth beside it, and the
+   two ends labelled. Drag or click along it to move. */
+.depth-meter {
+    position: fixed;
+    top: 18vh;
+    right: 0;
+    bottom: 18vh;
+    z-index: 46;
+    display: none;
+    width: 2.25rem;
+    padding: 0 0.85rem 0 0;
+    touch-action: none;
+    cursor: pointer;
+}
+
+.js .depth-meter {
+    display: block;
+}
+
+.depth-gauge {
+    position: absolute;
+    top: 0;
+    right: 0.85rem;
+    bottom: 0;
+    width: 1px;
+    background: rgb(127 149 184 / 0.28);
+}
+
+.depth-gauge i {
+    position: absolute;
+    right: 0;
+    width: 4px;
+    height: 1px;
+    background: rgb(127 149 184 / 0.4);
+}
+
+.depth-gauge i.is-major {
+    width: 8px;
+    background: rgb(127 149 184 / 0.65);
+}
+
+.depth-end,
+.depth-mark {
+    position: absolute;
+    right: 0.6rem;
+    color: var(--ink-soft);
+    font-family: var(--mono);
+    font-size: 0.625rem;
+    font-variant-ligatures: none;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 0.6;
+}
+
+/* An end's label makes way when the marker reaches it */
+.depth-end {
+    transition: opacity 0.25s ease;
+}
+
+.depth-end.is-near {
+    opacity: 0;
+}
+
+.depth-top {
+    top: -1.2em;
+    right: -0.35rem;
+}
+
+.depth-bottom {
+    bottom: -1.4em;
+    right: -0.35rem;
+}
+
+/* The marker: the depth, and a pointer at the line. It rides a track as
+   tall as the gauge, moved down it by transform. */
+.depth-track {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 0;
+    will-change: transform;
+}
+
+.depth-mark {
+    top: 0;
+    right: -0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--glow);
+    opacity: 0.85;
+    transform: translateY(-50%);
+    transition: opacity 0.2s ease;
+}
+
+.depth-reading {
+    opacity: 0;
+    transform: translateX(0.3rem);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* The reading shows while you scroll near it, point at the gauge or drag */
+.depth-meter:hover .depth-reading,
+.depth-meter.is-dragging .depth-reading,
+.depth-meter.is-reading .depth-reading {
+    opacity: 1;
+    transform: none;
+}
+
+:root[data-theme='day'] .depth-gauge,
+:root[data-theme='day'] .depth-gauge i {
+    background: rgb(12 44 76 / 0.45);
+}
+
+:root[data-theme='day'] .depth-end {
+    color: #0c2c4c;
+}
+
+:root[data-theme='day'] .depth-mark {
+    color: #0b4f86;
+}
+
+/* On phones: just the line and the marker */
+@media (max-width: 48rem) {
+    .depth-meter {
+        width: 1.25rem;
+        padding-right: 0.35rem;
+    }
+
+    .depth-gauge {
+        right: 0.35rem;
+    }
+
+    .depth-mark {
+        right: -0.2rem;
+    }
+
+    .depth-end {
+        display: none;
+    }
+}
+
+/* The arcade game (ArcadeMode.vue): over everything but the CRT lines, with
+   the page held still underneath */
+.arcade-open,
+.arcade-open body {
+    overflow: hidden;
+}
+
+.arcade {
+    position: fixed;
+    inset: 0;
+    z-index: 92;
+    outline: none;
+}
+
+.arcade-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+/* The way back out, for screens without an Esc key too */
+.arcade-exit {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgb(127 149 184 / 0.4);
+    border-radius: 0.4rem;
+    background: rgb(4 10 21 / 0.6);
+    color: #9fc6e8;
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+
+.has-sea-cursor .arcade-exit {
+    cursor: pointer !important;
+}
+
+.arcade-exit:hover,
+.arcade-exit:focus-visible {
+    color: var(--ink);
+    border-color: var(--glow);
+    outline: none;
+}
+
+@media (hover: none) {
+    .arcade-exit span {
+        display: none;
+    }
+}
+
+/* Lite: without graphics acceleration (utils/lite.ts) the browser draws
+   everything on the main processor, so the costly finishes go: the sea's
+   glow layer (the sea blends its glow in itself instead), the CRT overlay,
+   the drifting of the pictures, and blurs and shadows on text and controls. */
+.lite .sea-bloom,
+.lite .crt {
+    display: none;
+}
+
+/* The project tiles and the portrait hold still: moving their pictures
+   means redrawing them every frame, which is most of the cost of scrolling */
+.lite .work-track li,
+.lite .portrait {
+    animation: none !important;
+}
+
+.lite *,
+.lite *::before,
+.lite *::after {
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* The fish hook (FishHook.vue): it hangs from a line out of the top of the
+   screen, drops into the reef after a while at the bottom of the page, and
+   reels you back up to the top. Above the sea, below the cursor. */
+.hook {
+    position: fixed;
+    right: clamp(1.5rem, 14vw, 12rem);
+    bottom: 60vh;
+    bottom: 60lvh;
+    z-index: 46;
+    padding: 0.5rem;
+    border: 0;
+    background: none;
+    color: #c9d8ee;
+    font-family: var(--mono);
+    font-size: 1.5rem;
+    line-height: 1.05;
+    text-align: left;
+    pointer-events: none;
+    transform: translate3d(0, -130vh, 0);
+    transition: transform 1.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.hook.is-shown {
+    pointer-events: auto;
+    transform: translate3d(0, 0, 0);
+}
+
+/* Reeled in: quick, and accelerating upward */
+.hook.is-reeling {
+    transition: transform 0.9s cubic-bezier(0.6, 0, 0.9, 0.5);
+}
+
+.hook-swing {
+    position: relative;
+    display: block;
+    transform-origin: 1.5ch -100vh;
+}
+
+/* The line: a column of bars running up off the top of the screen */
+.hook-line::before {
+    content: '|\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |\A |';
+    position: absolute;
+    bottom: 100%;
+    left: 1ch;
+    width: 1ch;
+    height: 140vh;
+    overflow: hidden;
+    white-space: pre;
+    color: rgba(201, 216, 238, 0.55);
+}
+
+.hook-art {
+    display: block;
+    white-space: pre;
+    text-shadow: 0 0 0.5rem rgba(201, 216, 238, 0.45);
+}
+
+.hook-label {
+    position: absolute;
+    right: calc(100% - 0.25rem);
+    bottom: 0.6rem;
+    white-space: nowrap;
+    color: var(--glow);
+    font-size: 0.85rem;
+    /* A dark halo so it reads over the reef */
+    text-shadow:
+        0 0 0.25rem var(--sea),
+        0 0 0.6rem var(--sea),
+        0 0 1rem var(--sea);
+}
+
+.hook:hover .hook-art,
+.hook:focus-visible .hook-art {
+    color: #fff;
+    text-shadow: 0 0 0.9rem rgba(92, 207, 255, 0.9);
+}
+
+.hook:focus-visible {
+    outline: 2px solid var(--glow);
+    outline-offset: 0.25rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes hook-sway {
+        0%,
+        100% {
+            transform: rotate(-0.45deg);
+        }
+        50% {
+            transform: rotate(0.45deg);
+        }
+    }
+
+    .hook-swing {
+        animation: hook-sway 4.5s ease-in-out infinite;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hook,
+    .hook.is-reeling {
+        transition: none;
+    }
+}
+
+/* Work: a pinned row of tiles that slides sideways as the page scrolls */
+
+.work-pin {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding-block: calc(var(--u) * 4) calc(var(--u) * 4.5);
+}
+
+.work.is-driven .work-pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    overflow: clip;
+}
+
+.work-track {
+    --tile-w: min(78vw, calc((100svh - 17rem) * 0.82));
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--gutter);
+    padding-inline: calc(50% - var(--tile-w) / 2);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+
+.work-track::-webkit-scrollbar {
+    display: none;
+}
+
+.work-track li {
+    flex: none;
+    width: var(--tile-w);
+    scroll-snap-align: center;
+}
+
+.work.is-driven .work-track {
+    overflow: visible;
+    scroll-snap-type: none;
+    will-change: transform;
+}
+
+.tile {
+    display: flex;
+    flex-direction: column;
+    background: var(--abyss);
+    color: var(--ink);
+    text-decoration: none;
+}
+
+/* A driftwood frame for the floating project tiles and the portrait. The
+   wood itself is drawn in characters by AsciiFrame.vue over this border, so
+   the frames match the rest of the sea; the border just makes room for it
+   (and is a plain dark wood colour if the script never runs). The picture
+   sits slightly recessed, stained a little green by the water. */
+.tile,
+.frame {
+    --frame: calc(var(--u) * 1.3);
+    position: relative;
+    border: var(--frame) solid #3b3026;
+    background-clip: padding-box;
+    box-shadow: 0 2.5rem 3.5rem -1.5rem rgba(0, 3, 10, 0.85);
+}
+
+.js .tile,
+.js .frame {
+    border-color: transparent;
+}
+
+.ascii-frame {
+    position: absolute;
+    top: calc(var(--frame) * -1);
+    left: calc(var(--frame) * -1);
+    width: calc(100% + var(--frame) * 2);
+    height: calc(100% + var(--frame) * 2);
+    pointer-events: none;
+}
+
+.tile::after,
+.frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow:
+        inset 0 0.4rem 1.2rem rgba(0, 0, 0, 0.6),
+        inset 0 0 2.5rem rgba(30, 70, 58, 0.35);
+}
+
+.frame {
+    display: block;
+}
+
+.tile:hover {
+    background: var(--abyss);
+    color: var(--glow);
+}
+
+.tile:focus-visible {
+    outline: 2px solid var(--glow);
+    outline-offset: 3px;
+}
+
+.tile-media {
+    aspect-ratio: 1;
+}
+
+.tile-title {
+    display: flex;
+    align-items: flex-end;
+    min-height: calc(var(--h3) * var(--h3-lh) * 2 + var(--u) * 2);
+    padding: var(--u);
+    font-size: var(--h3);
+    font-weight: 700;
+    line-height: var(--h3-lh);
+    letter-spacing: -0.035em;
+}
+
+.pixel-image {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: var(--abyss);
+}
+
+.pixel-image img,
+.pixel-image canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pixel-image img.is-contain {
+    object-fit: contain;
+}
+
+/* With JavaScript the canvas takes over; the image stays for screen readers */
+.js .pixel-image img {
+    opacity: 0;
+}
+
+@media (min-width: 48.0625rem) {
+    .work-pin {
+        padding-block: calc(var(--u) * 5) calc(var(--u) * 5);
+    }
+
+    .work-track {
+        --tile-w: min(41vw, calc((100svh - 23rem) * 1.3333));
+    }
+
+    .tile-media {
+        aspect-ratio: 4 / 3;
+    }
+}
+
+/* Sections */
+
+.section {
+    padding-block: calc(var(--u) * 5) calc(var(--u) * 6);
+    color: var(--fg);
+}
+
+
+.section-head {
+    row-gap: 0.75rem;
+    padding-block: calc(var(--u) * 1.25);
+}
+
+.section-label {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    width: max-content;
+    font-size: var(--b1);
+    font-weight: 500;
+    line-height: var(--b1-lh);
+}
+
+.statement {
+    grid-column: 1 / -1;
+    font-size: var(--h2);
+    font-weight: 700;
+    line-height: var(--h2-lh);
+    letter-spacing: -0.02em;
+}
+
+@media (min-width: 48.0625rem) {
+    .section-head {
+        row-gap: calc(var(--u) * 1.25);
+    }
+
+    .section-label {
+        grid-column: 3 / -1;
+    }
+
+    .statement {
+        grid-column: 3 / span 9;
+    }
+}
+
+/* Experience: a log, newest first. A line of colons runs down the left
+   with a knot at each entry, like a sounding line; the dates sit by the
+   knots and the work beside them. */
+
+.log {
+    --knot: 1.25rem;
+    position: relative;
+    grid-column: 1 / -1;
+    max-width: 52rem;
+    padding-top: calc(var(--u) * 1.5);
+}
+
+/* The line: a one-character column of colons, as long as the log */
+.log::before {
+    content: ':\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :\A :';
+    position: absolute;
+    top: calc(var(--u) * 1.5 + 1.5em);
+    bottom: 0;
+    left: 0;
+    width: 1ch;
+    overflow: hidden;
+    white-space: pre;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    line-height: 1.1;
+    color: rgba(92, 207, 255, 0.35);
+}
+
+.log-entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: 0.4rem;
+    padding-left: calc(var(--knot) + 0.5rem);
+}
+
+.log-entry + .log-entry {
+    margin-top: calc(var(--u) * 3);
+}
+
+.log-when {
+    position: relative;
+    color: var(--glow);
+    font-variant-numeric: tabular-nums;
+}
+
+.log-knot {
+    position: absolute;
+    top: 0.3em;
+    left: calc((var(--knot) + 0.5rem) * -1);
+    width: 1ch;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    line-height: 1.1;
+    font-weight: 700;
+    text-align: center;
+    color: var(--glow);
+    text-shadow: 0 0 0.6rem rgba(92, 207, 255, 0.7);
+}
+
+.log-title {
+    font-size: clamp(1.35rem, 2.3vw, 2.1rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+}
+
+.log-place {
+    color: var(--ink);
+    opacity: 0.75;
+}
+
+.log-points {
+    margin-top: 0.6rem;
+    max-width: 38rem;
+}
+
+.log-points li {
+    position: relative;
+    padding-left: 1.1rem;
+}
+
+.log-points li + li {
+    margin-top: 0.35rem;
+}
+
+.log-points li::before {
+    content: '-';
+    position: absolute;
+    left: 0;
+    color: rgba(92, 207, 255, 0.6);
+}
+
+@media (min-width: 48.0625rem) {
+    .log {
+        grid-column: 3 / -1;
+    }
+
+    .log-entry {
+        grid-template-columns: 13rem 1fr;
+        column-gap: var(--gutter);
+    }
+
+    .log-when {
+        padding-top: 0.35em;
+    }
+}
+
+/* Skills: four short groups, two by two, at reading size */
+
+.kit {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: calc(var(--u) * 1.5) var(--gutter);
+    max-width: 52rem;
+    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 2);
+}
+
+.kit dt {
+    color: var(--glow);
+}
+
+.kit dd {
+    margin-top: 0.3rem;
+    max-width: 24rem;
+}
+
+@media (min-width: 48.0625rem) {
+    .kit {
+        grid-column: 3 / -1;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* About */
+
+.about {
+    row-gap: 2rem;
+    padding-top: calc(var(--u) * 2.5);
+}
+
+.portrait {
+    grid-column: 1 / span 4;
+}
+
+.portrait img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: 50% 35%;
+}
+
+.portrait figcaption {
+    margin-top: 0.75rem;
+}
+
+.about-text {
+    grid-column: 1 / -1;
+}
+
+.about-text p + p {
+    margin-top: calc(var(--u) * 0.75);
+}
+
+@media (min-width: 48.0625rem) {
+    .about {
+        padding-top: calc(var(--u) * 4);
+    }
+
+    .portrait {
+        grid-column: 3 / span 2;
+    }
+
+    .about-text {
+        grid-column: 7 / span 6;
+    }
+}
+
+/* Project page */
+
+.project {
+    padding-top: calc(var(--u) * 1.5);
+    padding-bottom: calc(var(--u) * 6);
+}
+
+.project-top {
+    align-items: baseline;
+}
+
+.project-back {
+    grid-column: 1 / span 5;
+    justify-self: start;
+}
+
+.project-top .num {
+    grid-column: 6 / -1;
+    justify-self: end;
+}
+
+.project-head {
+    padding-block: calc(var(--u) * 3) calc(var(--u) * 2);
+}
+
+.project-title {
+    grid-column: 1 / -1;
+    font-size: var(--h1);
+    font-weight: 700;
+    line-height: 0.86;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+}
+
+.project-kind {
+    grid-column: 1 / -1;
+    margin-top: var(--u);
+}
+
+.project-frame {
+    grid-column: 1 / -1;
+    display: block;
+}
+
+.project-media {
+    display: block;
+    aspect-ratio: 4 / 3;
+}
+
+/* What the project is, how it was built, and where the code is: plain
+   paragraphs at a comfortable reading width */
+.project-body {
+    padding-top: calc(var(--u) * 3);
+}
+
+.project-text {
+    grid-column: 1 / -1;
+    max-width: 38rem;
+}
+
+.project-text p + p {
+    margin-top: 0.9rem;
+}
+
+.project-tech {
+    color: var(--glow);
+}
+
+.project-next {
+    row-gap: 0.75rem;
+    padding-top: calc(var(--u) * 4);
+}
+
+.project-next a {
+    grid-column: 1 / -1;
+    justify-self: start;
+    font-size: var(--h2);
+    font-weight: 700;
+    line-height: var(--h2-lh);
+    letter-spacing: -0.02em;
+}
+
+@media (min-width: 48.0625rem) {
+    .project {
+        padding-top: calc(var(--u) * 2);
+        padding-bottom: calc(var(--u) * 10);
+    }
+
+    .project-back {
+        grid-column: 3 / span 4;
+    }
+
+    .project-top .num {
+        grid-column: 7 / -1;
+    }
+
+    .project-title,
+    .project-kind,
+    .project-frame,
+    .project-text {
+        grid-column: 3 / -1;
+    }
+
+    .project-media {
+        aspect-ratio: 16 / 9;
+    }
+
+    .project-next .section-label {
+        grid-row: auto;
+        margin-top: 0;
+    }
+
+    .project-next a {
+        grid-column: 3 / -1;
+    }
+}
+
+/* Contact */
+
+.contact {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding-top: calc(var(--u) * 5);
+    /* Room at the very bottom for the reef on the sea floor (floorHeight in seafloor.ts) */
+    padding-bottom: clamp(260px, 50vh, 440px);
+    padding-bottom: clamp(260px, 50lvh, 440px);
+    color: var(--glow);
+}
+
+/* Centred as a block, each line stepping in from the one above. The steps
+   are in em, so they keep their size whatever the block's width. */
+.contact-links {
+    width: fit-content;
+    max-width: 100%;
+    margin: auto;
+    padding: calc(var(--u) * 4) var(--margin);
+    font-size: clamp(3.25rem, 15vw, 6rem);
+    font-weight: 700;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+}
+
+.contact-links li:nth-child(2) {
+    margin-left: 0.5em;
+}
+
+.contact-links li:nth-child(3) {
+    margin-left: 1em;
+}
+
+.contact-links a {
+    text-decoration: none;
+}
+
+/* The name, credits and copyright sit at the very bottom of the page, on the
+   sand under the reef, in the sand's own amber, bold and glowing a little so
+   they read over it */
+.contact-foot {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    /* above the jellyfish, like the rest of the text (see "Paragraphs and lists") */
+    z-index: 45;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1.5rem;
+    width: 100%;
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: var(--margin);
+    color: #d2a969;
+    font-size: 0.875rem;
+    font-weight: 700;
+    /* A warm glow, like light catching the sand */
+    text-shadow: 0 0 6px rgb(232 188 117 / 0.55), 0 0 14px rgb(232 188 117 / 0.3);
+}
+
+/* It's small, so it keeps its glow even in the lighter drawing mode */
+.lite .contact-foot,
+.lite .contact-foot * {
+    text-shadow: 0 0 6px rgb(232 188 117 / 0.55), 0 0 14px rgb(232 188 117 / 0.3) !important;
+}
+
+.contact-foot a {
+    color: inherit;
+    text-decoration-color: rgb(210 169 105 / 0.55);
+}
+
+.contact-foot a:hover,
+.contact-foot a:focus-visible {
+    background: none;
+    color: #e8bc75;
+    text-decoration-color: currentColor;
+}
+
+@media (min-width: 48.0625rem) {
+    .contact-links {
+        font-size: clamp(5rem, 12.5vw, 14rem);
+        line-height: 0.86;
+    }
+
+    /* The three step in evenly */
+    .contact-links li:nth-child(2) {
+        margin-left: 0.95em;
+    }
+
+    .contact-links li:nth-child(3) {
+        margin-left: 1.9em;
+    }
+
+    .contact-foot {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding-inline: 0;
+        font-size: 1.0625rem;
+    }
+
+    .contact-foot p:first-child {
+        padding-left: var(--margin);
+    }
+
+    .contact-foot p:last-child {
+        padding-right: var(--margin);
+        text-align: right;
+    }
+}
+
+/* Motion: section labels flicker on the first time they are seen */
+
+@keyframes flicker {
+    0% { opacity: 0; }
+    40% { opacity: 1; }
+    60% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes name-trace {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes name-fill {
+    to {
+        fill: var(--name-fill);
+        stroke: rgba(92, 207, 255, 0);
+    }
+}
+
+@keyframes name-float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    22% { transform: translate(1.5px, -7px) rotate(-1.1deg); }
+    48% { transform: translate(-1px, 3px) rotate(0.5deg); }
+    74% { transform: translate(1px, -4px) rotate(1deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    /* The outline is traced, then the letters fill in and the outline fades */
+    .hero-name text {
+        fill: rgba(217, 230, 255, 0);
+        stroke: var(--glow);
+        stroke-width: 0.9px;
+        stroke-dasharray: 800;
+        stroke-dashoffset: 800;
+        animation:
+            name-trace 2.2s cubic-bezier(0.45, 0.05, 0.25, 1) 0.15s forwards,
+            name-fill 1s ease 1.75s forwards;
+    }
+
+    .hero-name text + text {
+        animation-delay: 0.55s, 2.15s;
+    }
+
+    /* The wet part of the first name traces with the rest of it */
+    .hero-name .hero-wet {
+        animation-delay: 0.15s, 1.75s;
+    }
+
+    /* The surname is under water, so once it has filled in it drifts:
+       bobbing up and down and rocking a little, never quite in a loop */
+    .hero-name .hero-under {
+        transform-box: fill-box;
+        transform-origin: 50% 60%;
+        animation:
+            name-trace 2.2s cubic-bezier(0.45, 0.05, 0.25, 1) 0.55s forwards,
+            name-fill 1s ease 2.15s forwards,
+            name-float 7.3s ease-in-out 2.4s infinite;
+    }
+
+    /* With JavaScript the names are towed in instead (TowIn.vue), already
+       drawn in full, so the trace above is only for when there's no script.
+       The surname starts drifting once the jellyfish has let go of it. */
+    .js .hero-name text {
+        fill: var(--name-fill);
+        stroke: none;
+        animation: none;
+    }
+
+    .js .hero-name .hero-under {
+        animation: name-float 7.3s ease-in-out 4.4s infinite;
+    }
+
+    /* The .js class is set by a one-line script in the page head */
+    .js [data-flicker] {
+        opacity: 0;
+    }
+
+    .js [data-flicker].is-in {
+        animation: flicker 0.5s linear var(--d, 0s) both;
+    }
+}
+
+/* Error page */
+
+.error-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--u);
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: var(--margin);
+}
+
+.error-page h1 {
+    font-size: var(--h2);
+    line-height: var(--h2-lh);
+    letter-spacing: -0.02em;
+}
+
+.error-page .section-label {
+    grid-row: auto;
+    margin-top: 0;
+}
+
+/* Floating canvases: the project tiles and the portrait drift in the water,
+   each bobbing and tilting at its own pace. Only transforms move, so the
+   browser can do it without redrawing anything. */
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes drift {
+        0%,
+        100% {
+            transform: translate3d(0, 0, 0) rotate(var(--tilt, -0.6deg));
+        }
+        50% {
+            transform: translate3d(0, var(--bob, -0.9rem), 0) rotate(calc(var(--tilt, -0.6deg) * -1));
+        }
+    }
+
+    .work-track li,
+    .portrait {
+        animation: drift var(--drift, 7s) ease-in-out infinite;
+        will-change: transform;
+    }
+
+    .work-track li:nth-child(3n + 2) {
+        --drift: 8.5s;
+        --tilt: 0.7deg;
+        --bob: -1.2rem;
+        animation-delay: -2.5s;
+    }
+
+    .work-track li:nth-child(3n) {
+        --drift: 6.2s;
+        --tilt: -0.9deg;
+        --bob: -0.7rem;
+        animation-delay: -4.5s;
+    }
+
+    .portrait {
+        --drift: 9s;
+        --tilt: 0.8deg;
+        --bob: -1rem;
+    }
+}
+
