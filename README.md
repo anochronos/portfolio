@@ -2,6 +2,14 @@
 
 My personal site, built with Nuxt 4 and generated as static files for GitHub Pages.
 
+Live at [akshunkal.com](https://akshunkal.com).
+
+![The top of the page at night: my name on the waterline, the boat, the moon and jellyfish](docs/screenshots/main.jpg)
+
+![The bottom of the page: the contact links above the reef on the sea floor](docs/screenshots/contact.jpg)
+
+![The top of the page by day, after holding down the moon](docs/screenshots/day.jpg)
+
 ## Run it
 
 You need Node 24.15 or newer (22.22.3 or newer on the 22 line also works). Check with `node --version`; `.nvmrc` pins the major version for nvm users.
@@ -30,6 +38,7 @@ npm run generate   # static build into .output/public
 | `app/components/DepthMeter.vue` | The depth gauge down the right edge, in place of the scrollbar. |
 | `app/components/ArcadeMode.vue` | A hidden game, "The deep end". Open it with the Konami code (↑ ↑ ↓ ↓ ← → ← → B A), by typing `dive`, or by clicking or tapping the moon three times quickly. The crab on the sea floor (`CrabSecret.vue`) whispers the secret to anyone who clicks through its speech bubble. |
 | `app/utils/sound.ts` | All the sound, and the music (see Credits). `SoundSwitch.vue` is its switch and volume meter. |
+| `docs/screenshots/` | The pictures in this README. They aren't part of the site. |
 | `app/utils/lite.ts` | The lighter drawing mode for computers without graphics acceleration (see below). |
 | `app/utils/ascii.ts` | The character ramp, the seven-hue palette and the glyph atlas the canvases share. |
 | `app/assets/css/main.css` | All styling. Colours, type sizes and spacing are variables at the top. |
