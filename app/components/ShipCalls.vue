@@ -128,9 +128,9 @@ function follow(now: number) {
   t.style.left = `${Math.max(10, Math.min(w - 24, boat.x - x - 7))}px`
 }
 
-function onDown(e: PointerEvent) {
-  if ((e.target as Element | null)?.closest?.('a, button, input, textarea, select, label, .depth-meter')) return
-  // Clicking the water: the crew is satisfied
+// Clicking or tapping the water (a sonar ping, see SeaScene.vue): the crew is
+// satisfied. A swipe to scroll on a phone doesn't count.
+function onPing() {
   if (!done.has('water')) {
     done.add('water')
     if (call.value?.id === 'water') hush('there she is')
@@ -156,7 +156,7 @@ watch(shown, (v) => {
 
 onMounted(() => {
   schedule(FIRST)
-  window.addEventListener('pointerdown', onDown, true)
+  window.addEventListener('sea:ping', onPing)
   window.addEventListener('sea:theme', onTheme)
   window.addEventListener('scroll', onScroll, { passive: true })
   document.addEventListener('visibilitychange', onHide)
@@ -165,7 +165,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   clearTimeout(timer)
   cancelAnimationFrame(frame)
-  window.removeEventListener('pointerdown', onDown, true)
+  window.removeEventListener('sea:ping', onPing)
   window.removeEventListener('sea:theme', onTheme)
   window.removeEventListener('scroll', onScroll)
   document.removeEventListener('visibilitychange', onHide)

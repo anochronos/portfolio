@@ -410,12 +410,32 @@ onMounted(async () => {
     touchHold = 0
   }
 
+  // A sonar ping where the water was clicked or tapped, which the crew
+  // (ShipCalls.vue) hears about too
+  function sonar(x: number, y: number) {
+    send({ type: 'ping', x, y })
+    ping(x)
+    window.dispatchEvent(new Event('sea:ping'))
+  }
+
+  // A mouse pings as soon as it's pressed. A finger only pings on a tap:
+  // lifted again quickly, without moving or scrolling the page, so swiping
+  // to scroll stays quiet.
+  let tap: { x: number; y: number; t: number; scroll: number } | null = null
+  const controls = 'a, button, input, textarea, select, label, .depth-meter, .arcade'
   function onDown(e: PointerEvent) {
     if (onTouchHold(e)) return
     // Clicking a link or button shouldn't set off a ping
-    if ((e.target as Element | null)?.closest?.('a, button, input, textarea, select, label, .depth-meter, .arcade')) return
-    send({ type: 'ping', x: e.clientX, y: e.clientY })
-    ping(e.clientX)
+    if ((e.target as Element | null)?.closest?.(controls)) return
+    if (e.pointerType === 'mouse') sonar(e.clientX, e.clientY)
+    else tap = { x: e.clientX, y: e.clientY, t: performance.now(), scroll: window.scrollY }
+  }
+  function onUp(e: PointerEvent) {
+    const t = tap
+    tap = null
+    if (!t || e.type !== 'pointerup') return
+    const still = Math.hypot(e.clientX - t.x, e.clientY - t.y) < 10 && Math.abs(window.scrollY - t.scroll) < 4
+    if (still && performance.now() - t.t < 350) sonar(e.clientX, e.clientY)
   }
   function onTheme(e?: Event) {
     // On load it's already set: no sunrise, just the remembered sky
@@ -443,6 +463,8 @@ onMounted(async () => {
   window.addEventListener('pointerdown', onDown, { passive: true })
   window.addEventListener('pointerup', cancelTouchHold, { passive: true })
   window.addEventListener('pointercancel', cancelTouchHold, { passive: true })
+  window.addEventListener('pointerup', onUp, { passive: true })
+  window.addEventListener('pointercancel', onUp, { passive: true })
   window.addEventListener('pointermove', cancelTouchHold, { passive: true })
   window.addEventListener('sea:theme', onTheme)
   window.addEventListener('sea:zone', onZone)
@@ -507,6 +529,8 @@ onMounted(async () => {
     window.removeEventListener('pointerdown', onDown)
     window.removeEventListener('pointerup', cancelTouchHold)
     window.removeEventListener('pointercancel', cancelTouchHold)
+    window.removeEventListener('pointerup', onUp)
+    window.removeEventListener('pointercancel', onUp)
     window.removeEventListener('pointermove', cancelTouchHold)
     window.removeEventListener('sea:theme', onTheme)
     clearTimeout(touchHold)
